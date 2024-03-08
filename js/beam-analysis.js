@@ -16,8 +16,8 @@ function Material (name, properties) {
 /**
  *
  * @param {Number} primarySpan          Beam primary span length
- * @param {Number} secondarySpan        Beam width
- * @param {Material} material           Beam material
+ * @param {Number} secondarySpan        Beam secondary span length
+ * @param {Material} material           Beam material object
  */
 function Beam (primarySpan, secondarySpan, material) {
     this.primarySpan    = primarySpan;
