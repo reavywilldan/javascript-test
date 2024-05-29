@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beam Analysis Plot</title>
 </head>
+
 <body>
     <form>
         <table>
@@ -30,7 +32,9 @@
                 <td><input type="text" id="secondarySpan" value=""> m</td>
             </tr>
             <tr>
-                <td colspan="2"><hr></td>
+                <td colspan="2">
+                    <hr>
+                </td>
             </tr>
             <tr>
                 <td>j2</td>
@@ -42,7 +46,9 @@
             </tr>
 
             <tr>
-                <td colspan="2"><hr></td>
+                <td colspan="2">
+                    <hr>
+                </td>
             </tr>
 
             <tr>
@@ -52,46 +58,52 @@
             </tr>
         </table>
     </form>
-    <canvas id="deflection_plot"></canvas>
-    <canvas id="shear_force_plot"></canvas>
-    <canvas id="bending_moment_plot"></canvas>
+
+    <div style="width: 90vh; height: 50vh; margin-top: 5vh;">
+        <canvas id="deflection_plot"></canvas>
+    </div>
+    <div style="width: 90vh; height: 50vh;">
+        <canvas id="shear_force_plot"></canvas>
+    </div>
+    <div style="width: 90vh; height: 50vh;">
+        <canvas id="bending_moment_plot"></canvas>
+    </div>
 
     <script src="js/beam-analysis.js"></script>
     <script src="js/analysis-plotter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         /**
          * Get float value of specified field
          */
         function floatVal(id) {
-            return parseFloat(
-                document.getElementById(id).value
-            );
+            return parseFloat(document.getElementById(id).value);
         }
 
         function stringVal(id) {
             return document.getElementById(id).value;
         }
 
-        document.getElementById('calculate').addEventListener('click', function(e) {
-            var beam = new Beam();
-
-            beam.primarySpan    = floatVal('primarySpan');
-            beam.secondarySpan  = floatVal('secondarySpan');
-            beam.material       = new Material('No Name', {
-                EI : floatVal('EI')
-            });
+        document.getElementById('calculate').addEventListener('click', function () {
+            var beam = new Beam(
+                floatVal('primarySpan'),
+                floatVal('secondarySpan'),
+                new Material('No Name', { EI: floatVal('EI'), j2: floatVal('j2') })
+            );
 
             var plotter = {
-                deflection      : new AnalysisPlotter('deflection_plot'),
-                shearForce      : new AnalysisPlotter('shear_force_plot'),
-                bendingMoment   : new AnalysisPlotter('bending_moment_plot')
-            }
+                deflection: new AnalysisPlotter('deflection_plot'),
+                shearForce: new AnalysisPlotter('shear_force_plot'),
+                bendingMoment: new AnalysisPlotter('bending_moment_plot')
+            };
 
-            var beamAnalysis        = new BeamAnalysis();
-            var deflectionData      = beamAnalysis.getDeflection(beam, floatVal('w'), stringVal('condition'));
-            var bendingMomentData   = beamAnalysis.getBendingMoment(beam, floatVal('w'), stringVal('condition'));
-            var shearForceData      = beamAnalysis.getShearForce(beam, floatVal('w'), stringVal('condition'));
+            var beamAnalysis = new BeamAnalysis();
+            var load = floatVal('w');
+            var condition = stringVal('condition');
+            var deflectionData = beamAnalysis.getDeflection(beam, load, condition);
+            var bendingMomentData = beamAnalysis.getBendingMoment(beam, load, condition);
+            var shearForceData = beamAnalysis.getShearForce(beam, load, condition);
 
             plotter.deflection.plot(deflectionData);
             plotter.shearForce.plot(shearForceData);
@@ -99,4 +111,5 @@
         });
     </script>
 </body>
+
 </html>
