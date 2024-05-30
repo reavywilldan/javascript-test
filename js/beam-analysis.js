@@ -174,29 +174,33 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
         const { primarySpan, secondarySpan } = beam;
         const { EI, j2 } = beam.material.properties;
         const totalLength = primarySpan + secondarySpan;
+
+        // Support reactions based on beam loading and span
         const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
         const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
         const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
         const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
-        const step = totalLength / 10;
+
+        const step = totalLength / 1000;
         const xValues = [];
         const vValues = [];
 
         for (let i = 0; i <= totalLength; i += step) {
             const x = parseFloat(i.toFixed(1));
             xValues.push(x);
-            const V = this.calculateDeflectionValue(x, { primarySpan, totalLength, EI, j2, R1, R2, load });
-            vValues.push(parseFloat(V.toFixed(1)));
+            const V = this.calculateDeflectionValue(x, { primarySpan, secondarySpan, EI, j2, R1, R2, R3, load });
+            vValues.push(parseFloat((V * 1e9).toFixed(1)));
         }
 
         return { x: xValues, y: vValues };
     },
 
-    calculateDeflectionValue: function (x, { primarySpan, totalLength, EI, j2, R1, R2, load }) {
-        if (x < primarySpan) {
+    calculateDeflectionValue: function (x, { primarySpan, secondarySpan, EI, j2, R1, R2, R3, load }) {
+        if (x <= primarySpan) {
             return ((x / (24 * EI)) * (4 * R1 * Math.pow(x, 2) - load * Math.pow(x, 3) + load * Math.pow(primarySpan, 3) - 4 * R1 * Math.pow(primarySpan, 2))) * j2 * 1000;
         } else {
-            return (((R1 * x / 6) * (Math.pow(x, 2) - Math.pow(primarySpan, 2)) + (R2 * x / 6) * (Math.pow(x, 2) - 3 * primarySpan * x + 3 * Math.pow(primarySpan, 2)) - R2 * Math.pow(primarySpan, 3) / 6 - (load * x / 24) * (Math.pow(x, 3) - Math.pow(primarySpan, 3))) / EI) * j2 * 1000;
+            const span2_x = x - primarySpan;
+            return (((R1 * x / 6) * (Math.pow(x, 2) - Math.pow(primarySpan, 2)) + (R2 * span2_x / 6) * (Math.pow(span2_x, 2) - 3 * primarySpan * span2_x + 3 * Math.pow(primarySpan, 2)) - R2 * Math.pow(primarySpan, 3) / 6 - (load * span2_x / 24) * (Math.pow(span2_x, 3) - Math.pow(secondarySpan, 3))) / EI) * j2 * 1000;
         }
     },
 
@@ -207,7 +211,7 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
         const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
         const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
         const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
-        const step = totalLength / 10;
+        const step = totalLength / 1000;
         const xValues = [];
         const vValues = [];
 
@@ -235,24 +239,28 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
         const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
         const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
         const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
-        const step = totalLength / 10;
+        const step = totalLength / 1000;
         const xValues = [];
         const vValues = [];
 
         for (let i = 0; i <= totalLength; i += step) {
             const x = parseFloat(i.toFixed(1));
             xValues.push(x);
-            const V = this.calculateShearForceValue(x, { primarySpan, totalLength, R1, R2, load });
+
+            let V = this.calculateShearForceValue(x, { primarySpan, R1, R2, load });
             vValues.push(parseFloat(V.toFixed(1)));
         }
 
         return { x: xValues, y: vValues };
     },
 
-    calculateShearForceValue: function (x, { primarySpan, totalLength, R1, R2, load }) {
-        if (x === 0 || x === totalLength) return 0;
-        if (x < primarySpan) return -(R1 - load * x);
-        if (x > primarySpan) return -(R1 + R2 - load * x);
-        return -(R1 - load * primarySpan);
+    calculateShearForceValue: function (x, { primarySpan, R1, R2, load }) {
+        if (x < primarySpan) {
+            return R1 - load * x;
+        } else if (x === primarySpan) {
+            return R2 - load * x;
+        } else {
+            return R2 - load * (x - primarySpan);
+        }
     }
 };
