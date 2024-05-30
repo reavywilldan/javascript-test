@@ -111,9 +111,8 @@ BeamAnalysis.analyzer.simplySupported.prototype = {
     getDeflectionEquation: function (beam, load) {
         const { primarySpan } = beam;
         const { EI, j2 } = beam.material.properties;
-        const step = primarySpan / 10;
-        const xValues = [];
-        const vValues = [];
+        const step = primarySpan / 8;
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= primarySpan; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -128,8 +127,7 @@ BeamAnalysis.analyzer.simplySupported.prototype = {
     getBendingMomentEquation: function (beam, load) {
         const { primarySpan } = beam;
         const step = primarySpan / 10;
-        const xValues = [];
-        const vValues = [];
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= primarySpan; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -144,8 +142,7 @@ BeamAnalysis.analyzer.simplySupported.prototype = {
     getShearForceEquation: function (beam, load) {
         const { primarySpan } = beam;
         const step = primarySpan / 10;
-        const xValues = [];
-        const vValues = [];
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= primarySpan; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -175,14 +172,9 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
         const { EI, j2 } = beam.material.properties;
         const totalLength = primarySpan + secondarySpan;
 
-        const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
-        const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
-        const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
-        const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
-
+        const { M1, R1, R2, R3 } = this.calculateSupports(primarySpan, secondarySpan, load);
         const step = totalLength / 1000;
-        const xValues = [];
-        const vValues = [];
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= totalLength; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -206,13 +198,9 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
     getBendingMomentEquation: function (beam, load) {
         const { primarySpan, secondarySpan } = beam;
         const totalLength = primarySpan + secondarySpan;
-        const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
-        const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
-        const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
-        const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
+        const { M1, R1, R2, R3 } = this.calculateSupports(primarySpan, secondarySpan, load);
         const step = totalLength / 1000;
-        const xValues = [];
-        const vValues = [];
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= totalLength; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -234,13 +222,9 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
     getShearForceEquation: function (beam, load) {
         const { primarySpan, secondarySpan } = beam;
         const totalLength = primarySpan + secondarySpan;
-        const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
-        const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
-        const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
-        const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
+        const { M1, R1, R2, R3 } = this.calculateSupports(primarySpan, secondarySpan, load);
         const step = totalLength / 1000;
-        const xValues = [];
-        const vValues = [];
+        const xValues = [], vValues = [];
 
         for (let i = 0; i <= totalLength; i += step) {
             const x = parseFloat(i.toFixed(1));
@@ -254,12 +238,16 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
     },
 
     calculateShearForceValue: function (x, { primarySpan, R1, R2, load }) {
-        if (x < primarySpan) {
-            return R1 - load * x;
-        } else if (x === primarySpan) {
-            return R2 - load * x;
-        } else {
-            return R2 - load * (x - primarySpan);
-        }
+        if (x < primarySpan) return R1 - load * x;
+        if (x === primarySpan) return R2 - load * x;
+        return R2 - load * (x - primarySpan);
+    },
+
+    calculateSupports: function (primarySpan, secondarySpan, load) {
+        const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
+        const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
+        const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
+        const R2 = (load * primarySpan) + (load * secondarySpan) - R1 - R3;
+        return { M1, R1, R2, R3 };
     }
 };
