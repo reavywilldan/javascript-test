@@ -175,7 +175,6 @@ BeamAnalysis.analyzer.twoSpanUnequal.prototype = {
         const { EI, j2 } = beam.material.properties;
         const totalLength = primarySpan + secondarySpan;
 
-        // Support reactions based on beam loading and span
         const M1 = -((load * Math.pow(secondarySpan, 3)) + (load * Math.pow(primarySpan, 3))) / (8 * (primarySpan + secondarySpan));
         const R1 = (M1 / primarySpan) + ((load * primarySpan) / 2);
         const R3 = (M1 / secondarySpan) + ((load * secondarySpan) / 2);
